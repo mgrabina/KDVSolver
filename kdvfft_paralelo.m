@@ -1,12 +1,22 @@
 
 %lie trotter
 %Kdv Dos_solitones
-function kdvfft(kdvOrder)
+function kdvfft_paralelo(kdvOrder)
 if(mod(kdvOrder,2) ~= 0)
     disp("Order must be pair");
     return;
 end
+delete(gcp('nocreate'));
 
+myCluster = parcluster('local');
+numOfCores = 4;
+if(kdvOrder<4)
+    numOfCores = kdvOrder;
+end
+myCluster.NumWorkers = numOfCores;  % 'Modified' property now TRUE
+saveProfile(myCluster);    % 'local' profile now updated,
+                           % 'Modified' property now FALSE
+parpool('local', numOfCores);
 clc
 set(gca,'FontSize',8)
 set(gca,'LineWidth',2)
@@ -44,11 +54,21 @@ order = orders{1,kdvOrder/2};
 for n = 1:nmax-40000
     
     t = n*delta_t;
-    
-    for i = 1:1:kdvOrder
-        U{i} = calculateOrder(delta_t/ceil(i/2),k,U{i},map(i),i);
-    end
     retU = 0;
+    spmd
+        for i=0:1:kdvOrder-1
+            if(mod(i,4)== labindex-1) 
+                U{i+1} = calculateOrder(delta_t/ceil((i+1)/2),k,U{i+1},map(i+1),i+1);
+            end
+        end
+    end
+    T = {};
+    for i=0:1:kdvOrder-1
+        aux = U{mod(i,4)+1};
+        T{i+1} = aux{i+1};
+    end
+    U = T;
+    
     for i=1:1:kdvOrder
         retU = retU + 2 * order(i) * U{i};
     end
