@@ -32,9 +32,10 @@ U1 = fft(u);
 U2 = fft(u);
 U3 = fft(u);
 U4 = fft(u);
+
 % orders 2 , 4 , 6
 orders = {[-1/6,2/3], [1/90,-2/9,0,32/45], [-1/1680,1/15,-27/80,0,0,27/35]};
-order = orders{1,1};
+order = orders{1,2};
 for n = 1:nmax-40000
     t = n*delta_t;
     
@@ -49,24 +50,24 @@ for n = 1:nmax-40000
     U2 = U2.*exp(1i*k.^3*delta_t);
     
     % lineal
-    U3 = U3.*exp(1i*k.^3*delta_t);
+    U3 = U3.*exp(1i*k.^3*delta_t/2);
     % no lineal
-    U3 = U3  - (3i*k*delta_t).*fft((real(ifft(U3))).^2);
+    U3 = U3  - (3i*k*delta_t/2).*fft((real(ifft(U3))).^2);
     % lineal
-    U3 = U3.*exp(1i*k.^3*delta_t);
+    U3 = U3.*exp(1i*k.^3*delta_t/2);
     % no lineal
-    U3 = U3  - (3i*k*delta_t).*fft((real(ifft(U3))).^2);
+    U3 = U3  - (3i*k*delta_t/2).*fft((real(ifft(U3))).^2);
     
     % no lineal
-    U4 = U4 - (3i*k*delta_t).*fft((real(ifft(U4))).^2);
+    U4 = U4 - (3i*k*delta_t/2).*fft((real(ifft(U4))).^2);
     % lineal
-    U4 = U4.*exp(1i*k.^3*delta_t);
+    U4 = U4.*exp(1i*k.^3*delta_t/2);
     % no lineal
-    U4 = U4 - (3i*k*delta_t).*fft((real(ifft(U4))).^2);
+    U4 = U4 - (3i*k*delta_t/2).*fft((real(ifft(U4))).^2);
     % lineal
-    U4 = U4.*exp(1i*k.^3*delta_t);
+    U4 = U4.*exp(1i*k.^3*delta_t/2);
     
-    U = U1*order(1) + U2*order(2);%+U3*order(3)+U4*order(4);
+    U = U1*order(1) + U2*order(2)+U3*order(3)+U4*order(4);
     
     if mod(n,nplt) == 0
         u = real(ifft(U));
