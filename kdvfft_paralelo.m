@@ -1,5 +1,4 @@
 
-%lie trotter
 %Kdv Dos_solitones
 function kdvfft_paralelo(kdvOrder)
 if(mod(kdvOrder,2) ~= 0)

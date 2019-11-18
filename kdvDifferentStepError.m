@@ -1,7 +1,7 @@
 
 %lie trotter
 %Kdv Dos_solitones
-function kdvfft(kdvOrder)
+function kdvError(kdvOrder,stepDifference)
 if(mod(kdvOrder,2) ~= 0)
     disp("Order must be pair");
     return;
@@ -22,7 +22,9 @@ c_2 =3;
 
 u = 1/2*c_1*(sech(sqrt(c_1)*(x+8)/2)).^2 + 1/2*c_2*(sech(sqrt(c_2)*(x+1)/2)).^2;
 
-delta_t = 0.4/N^2;
+delta_t = 1/N^2;
+delta_t2 = 1/(N^2*stepDifference);
+
 t=0;
 plot(x,u,'LineWidth',2)
 axis([-10 10 0 10])
@@ -37,14 +39,19 @@ for i=1:1:kdvOrder
     U{i} = fft(u);
 end
 
+for i=1:1:kdvOrder
+    U2{i} = fft(u);
+end
+
 % orders 2 , 4 , 6
 orders = {[-1/6,2/3], [1/90,-2/9,0,32/45], [-1/1680,1/15,-27/80,0,0,27/35]};
 map = [2, 2, 4, 4, 6, 6];
 order = orders{1,kdvOrder/2};
+
 for n = 1:nmax-40000
     
     t = n*delta_t;
-    
+    % step 1
     for i = 1:1:kdvOrder
         U{i} = calculateOrder(delta_t/ceil(i/2),k,U{i},map(i),i);
     end
@@ -53,10 +60,24 @@ for n = 1:nmax-40000
         retU = retU + 2 * order(i) * U{i};
     end
     
+    % step 2
+    for z = 1:stepDifference
+        for i = 1:1:kdvOrder
+            U2{i} = calculateOrder(delta_t2/ceil(i/2),k,U2{i},map(i),i);
+        end
+        retU2 = 0;
+        for i=1:1:kdvOrder
+            retU2 = retU2 + 2 * order(i) * U2{i};
+        end
+    end
+    
     if mod(n,nplt) == 0
         u = real(ifft(retU));
+        u2 = real(ifft(retU2));
         udata = [udata u.']; tdata = [tdata t];
         if mod(n,4*nplt) == 0
+            error = u2 - u;
+            median(error)
             plot(x,u,'LineWidth',2)
             axis([-10 10 0 10])
             xlabel('x')
