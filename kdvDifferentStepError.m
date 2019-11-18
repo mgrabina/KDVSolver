@@ -1,7 +1,8 @@
 
-%lie trotter
 %Kdv Dos_solitones
-function kdvError(kdvOrder,stepDifference)
+% compares step1 = 1/256^² with step 2 = (1/256^²) * 1 / stepDifference
+% in order 'kdvOrder'
+function kdvDifferentStepError(kdvOrder,stepDifference)
 if(mod(kdvOrder,2) ~= 0)
     disp("Order must be pair");
     return;
@@ -22,8 +23,8 @@ c_2 =3;
 
 u = 1/2*c_1*(sech(sqrt(c_1)*(x+8)/2)).^2 + 1/2*c_2*(sech(sqrt(c_2)*(x+1)/2)).^2;
 
-delta_t = 1/N^2;
-delta_t2 = 1/(N^2*stepDifference);
+delta_t = 0.4/N^2;
+delta_t2 = 0.4/(N^2*stepDifference);
 
 t=0;
 plot(x,u,'LineWidth',2)
@@ -47,7 +48,7 @@ end
 orders = {[-1/6,2/3], [1/90,-2/9,0,32/45], [-1/1680,1/15,-27/80,0,0,27/35]};
 map = [2, 2, 4, 4, 6, 6];
 order = orders{1,kdvOrder/2};
-
+time = 1;
 for n = 1:nmax-40000
     
     t = n*delta_t;
@@ -76,13 +77,19 @@ for n = 1:nmax-40000
         u2 = real(ifft(retU2));
         udata = [udata u.']; tdata = [tdata t];
         if mod(n,4*nplt) == 0
-            error = u2 - u;
-            median(error)
+            subplot(1,2,1)
+            t2(time) = t;
+            error(time) = mean(abs(u2 - u));
             plot(x,u,'LineWidth',2)
             axis([-10 10 0 10])
             xlabel('x')
             ylabel('u')
             text(6,9,['t = ',num2str(t,'%1.2f')],'FontSize',10)
+            subplot(1,2,2)
+            plot(t2,error);
+            xlabel('time[s]')
+            ylabel('Mean square Error')
+            time = time + 1;
             drawnow
         end
     end
