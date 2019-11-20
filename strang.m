@@ -1,6 +1,6 @@
 
 %Kdv Dos_solitones
-function strang()
+function strang(kdvOrder)
 
 clc
 set(gca,'FontSize',8)
@@ -30,22 +30,45 @@ tmax = 1.5; nplt = floor((tmax/100)/delta_t); nmax = round(tmax/delta_t);
 udata = u.'; tdata = 0;
 
 U = fft(u);
-
+for i=1:1:kdvOrder
+    U2{i} = fft(u);
+end% orders 2 , 4 , 6
+orders = {[-1/6,2/3], [1/90,-2/9,0,32/45], [-1/1680,1/15,-27/80,0,0,27/35]};
+map = [2, 2, 4, 4, 6, 6];
+order = orders{1,kdvOrder/2};
+time = 1;
 for n = 1:nmax-40000
     
     t = n*delta_t;
     
-    U = calculateOrder(delta_t,k,U);
+    U = calculateOrder2(delta_t,k,U);
+    
+    for i = 1:1:kdvOrder
+        U2{i} = calculateOrder(delta_t/ceil(i/2),k,U2{i},map(i),i);
+    end
+    retU = 0;
+    for i=1:1:kdvOrder
+        retU = retU + 2 * order(i) * U2{i};
+    end
     
     if mod(n,nplt) == 0
         u = real(ifft(U));
+        u2 = real(ifft(retU));
         udata = [udata u.']; tdata = [tdata t];
         if mod(n,4*nplt) == 0
+            subplot(1,2,1)
+            t2(time) = t;
+            error(time) = mean(abs(u2 - u));
             plot(x,u,'LineWidth',2)
             axis([-10 10 0 10])
             xlabel('x')
             ylabel('u')
             text(6,9,['t = ',num2str(t,'%1.2f')],'FontSize',10)
+            subplot(1,2,2)
+            plot(t2,error);
+            xlabel('time[s]')
+            ylabel('Mean Error')
+            time = time + 1;
             drawnow
         end
     end
@@ -66,13 +89,27 @@ function ret=nonlinear(delta_t,k,U)
 ret = U - (3i*k*delta_t).*fft((real(ifft(U))).^2);
 end
 
-function ret=calculateOrder(delta_t,k,U)
+function ret=calculateOrder2(delta_t,k,U)
 ret = U;
 ret = linear(delta_t/2,k,ret);
 ret = nonlinear(delta_t,k,ret);
 ret = linear(delta_t/2,k,ret);
 end
 
+function ret=calculateOrder(delta_t,k,U,order,index)
+ret = U;
+if(mod(index,2)==0)
+    for i=1:1:order/2
+        ret = nonlinear(delta_t,k,ret);
+        ret = linear(delta_t,k,ret);
+    end
+else
+    for i=1:1:order/2
+        ret = linear(delta_t,k,ret);
+        ret = nonlinear(delta_t,k,ret);
+    end
+end
+end
 
 
 
