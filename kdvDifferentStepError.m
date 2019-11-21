@@ -1,6 +1,6 @@
 
 %Kdv Dos_solitones
-% compares step1 = 1/256^² with step 2 = (1/256^²) * 1 / stepDifference
+% compares step1 = 0.4/256^² with step 2 = (0.4/256^²) * 1 / stepDifference
 % in order 'kdvOrder'
 function kdvDifferentStepError(kdvOrder,stepDifference)
 if(mod(kdvOrder,2) ~= 0)
@@ -88,7 +88,7 @@ for n = 1:nmax-40000
             subplot(1,2,2)
             plot(t2,error);
             xlabel('time[s]')
-            ylabel('Mean square Error')
+            ylabel('Mean Error')
             time = time + 1;
             drawnow
         end
